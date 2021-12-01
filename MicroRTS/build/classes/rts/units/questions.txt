@@ -1,0 +1,23 @@
+Questions:
+
+How to best store previously made units
+	Save all parameter choices to some file.  Java text file where every line is a parameter value
+	boolean I can set am I generating from scratch or loading from the file?
+
+How do XML Documents work?
+
+~For making the order of games, since we alternate who has "Killer" is it important to do that in the mini sets or to just have one have killer, run it "n" times and then switch, run "n" times, etc.
+
+where am I going to want to have my program run games from?  Manually I do it from the GUI.  Will I make something that can interact with the GUI somehow or just find what files the GUI runs and have my program run those ignoring that step.
+	Trace all the functions from main to figure out which run the game
+	
+
+
+Set up stuff in tournament
+Where to fix preset for BS3
+Writing to text file
+Made maps
+Trace usage, it does store the units in the game for each player at different times and their current status.  
+
+Wrapper file to save what kind of text file I want to save
+email santi
