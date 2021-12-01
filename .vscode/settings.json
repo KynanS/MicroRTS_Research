@@ -4,6 +4,10 @@
         "microrts-master/microrts-master/lib/jdom.jar",
         "microrts-master/microrts-master/lib/minimal-json-0.9.4.jar",
         "microrts-master/microrts-master/lib/weka.jar",
-        "microrts-master/microrts-master/lib/opencsv-5.5.2.jar"
+        "microrts-master/microrts-master/lib/opencsv-5.5.2.jar",
+        "microrts-master/lib/jdom.jar",
+        "microrts-master/lib/minimal-json-0.9.4.jar",
+        "microrts-master/lib/opencsv-5.5.2.jar",
+        "microrts-master/lib/weka.jar"
     ]
 }
