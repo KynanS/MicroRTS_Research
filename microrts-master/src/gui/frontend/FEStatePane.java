@@ -249,20 +249,20 @@ public class FEStatePane extends JPanel {
     int bestGamesWonWith1 = 0;
 
     // variables for round 1
-    float scoreR1[] = new float[10];
-    int gamesWithKillerR1[] = new int[10];
-    int totalKillerTime[] = new int[10];
-    int gamesPlayedR1[] = new int[10];
-    int gamesWonWithKillerR1[] = new int[10];
+    float scoreR1[] = new float[8];
+    int gamesWithKillerR1[] = new int[8];
+    int totalKillerTime[] = new int[8];
+    int gamesPlayedR1[] = new int[8];
+    int gamesWonWithKillerR1[] = new int[8];
 
     // variables for round 2
-    float scoreR2[] = new float[10];
-    int gamesWithKiller0[] = new int[10];
-    int gamesWithKiller1[] = new int[10];
-    int gamesWithKillerBoth[] = new int[10];
-    int gamesPlayedR2[] = new int[10];
-    int gamesWonWithKiller0[] = new int[10];
-    int gamesWonWithKiller1[] = new int[10];    
+    float scoreR2[] = new float[8];
+    int gamesWithKiller0[] = new int[8];
+    int gamesWithKiller1[] = new int[8];
+    int gamesWithKillerBoth[] = new int[8];
+    int gamesPlayedR2[] = new int[8];
+    int gamesWonWithKiller0[] = new int[8];
+    int gamesWonWithKiller1[] = new int[8];    
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public FEStatePane() throws Exception {        
@@ -970,6 +970,7 @@ public class FEStatePane extends JPanel {
                     int rVersion = versionNum;
                     boolean player0 = false;
                     boolean player1 = false;
+                    boolean both = false;
                     mainTable.killer = killerOptions.get(versionNum);
                     AI ai1 = createAI(aiComboBox[0].getSelectedIndex(), 0, mainTable);
                     AI ai2 = createAI(aiComboBox[1].getSelectedIndex(), 1, mainTable);
@@ -1088,8 +1089,9 @@ public class FEStatePane extends JPanel {
                                             gamesWithKiller1[rVersion]++;
                                             player1 = true;
                                         }
-                                        if (player0 && player1) {
+                                        if ((player0 && player1) && !both) {
                                             gamesWithKillerBoth[rVersion]++;
+                                            both = true;
                                         }
                                     }
                                 }
@@ -1124,7 +1126,7 @@ public class FEStatePane extends JPanel {
                             // add to the score if player 0 won and killer was made
                             if (gs.getPhysicalGameState().winner() == 0 && !killerAppear.isEmpty()) {
                                 for (int i = 0; i < killerAppear.size(); i++) {                                
-                                    scoreR1[rVersion] += 1f * FinalScore(killerDisappear.get(i).floatValue(), killerAppear.get(i).floatValue(), gs.getTime());                                    
+                                    scoreR1[rVersion] += 1f * FinalScoreR1(killerDisappear.get(i).floatValue(), killerAppear.get(i).floatValue(), gs.getTime());                                    
                                 }   
                                 gamesWonWithKillerR1[rVersion]++;
                             }
@@ -1132,16 +1134,16 @@ public class FEStatePane extends JPanel {
                             // subract to the score if player 1 won/there was a draw and killer was made
                             else if (!killerAppear.isEmpty()) {
                                 for (int i = 0; i < killerAppear.size(); i++) {                                
-                                    scoreR1[rVersion] -= 1f * FinalScore(killerDisappear.get(i).floatValue(), killerAppear.get(i).floatValue(), gs.getTime());
+                                    scoreR1[rVersion] -= 1f * FinalScoreR1(killerDisappear.get(i).floatValue(), killerAppear.get(i).floatValue(), gs.getTime());
                                 }
                             }
 
                             // don't add to the score if killer wasn't made regardless of win, loss or draw
                             // if all the games for this unit in this round have been played, record the results
                             if (gamesPlayedR1[rVersion] == Integer.parseInt(numberOfGames.getText())){
-                                String testFilePath = "C:\\Users\\kynan\\Documents\\OneDrive\\rtsResearch\\MicroRTS\\tests.csv";
+                                String testFilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\MicroRTS\\tests.csv";
                                 File testFile = new File(testFilePath);
-                                scoreR1[rVersion] = scoreR1[rVersion] / (gamesPlayedR1[rVersion]);
+                                scoreR1[rVersion] = scoreR1[rVersion] / (gamesWithKillerR1[rVersion]);
                                 try {
                                     Writer testOutputFile = new FileWriter(testFile, true);
                                     testOutputFile.append("Killer has cost: "+ killerOptions.get(versionNum).cost + " hp: " + killerOptions.get(versionNum).hp + " min Damage: " + killerOptions.get(versionNum).minDamage + " max Damage: " + killerOptions.get(versionNum).maxDamage + " attack range: " + killerOptions.get(versionNum).attackRange + "\n");
@@ -1156,7 +1158,7 @@ public class FEStatePane extends JPanel {
                             }
                             // check to see if it's time to start round 2
                             boolean round2 = true;
-                            for (int i = 0; i < 10; i++) {
+                            for (int i = 0; i < 8; i++) {
                                 if (gamesPlayedR1[i] < Integer.parseInt(numberOfGames.getText())) {
                                     round2 = false;
                                 }
@@ -1167,7 +1169,7 @@ public class FEStatePane extends JPanel {
                             } 
                         }
 
-                        if (round == 2) {
+                        else if (round == 2) {
                             gamesPlayedR2[rVersion]++;
                             // if player 0 wins and a player made killer
                             if (gs.getPhysicalGameState().winner() == 0 && (player0 || player1)) {
@@ -1180,12 +1182,12 @@ public class FEStatePane extends JPanel {
 
                             // record findings
                             if (gamesPlayedR2[rVersion] == Integer.parseInt(numberOfGames.getText())){
-                                String testFilePath = "C:\\Users\\kynan\\Documents\\OneDrive\\rtsResearch\\MicroRTS\\tests.csv";
+                                String testFilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\MicroRTS\\tests.csv";
                                 File testFile = new File(testFilePath);
                                 Integer gw0 = gamesWonWithKiller0[rVersion];
                                 Integer gwk0 = gamesWithKiller0[rVersion];
-                                Integer gwk1 = gamesWithKiller1[rVersion];
-                                scoreR2[rVersion] = 1f - Math.abs(0.5f - (gw0.floatValue()/(gwk0.floatValue() + gwk1.floatValue())));
+                                Integer gwk1 = gamesWithKiller1[rVersion] - gamesWithKillerBoth[rVersion];
+                                scoreR2[rVersion] = FinalScoreR2(gw0.floatValue(), gwk0.floatValue(), gwk1.floatValue());
                                 try {
                                     Writer testOutputFile = new FileWriter(testFile, true);
                                     testOutputFile.append("Killer has cost: "+ killerOptions.get(versionNum).cost + " hp: " + killerOptions.get(versionNum).hp + " min Damage: " + killerOptions.get(versionNum).minDamage + " max Damage: " + killerOptions.get(versionNum).maxDamage + " attack range: " + killerOptions.get(versionNum).attackRange + "\n");
@@ -1202,7 +1204,7 @@ public class FEStatePane extends JPanel {
                                     e.printStackTrace();
                                 }
                             boolean eval = true;
-                            for (int i = 0; i < 10; i++) {
+                            for (int i = 0; i < 8; i++) {
                                 if (gamesPlayedR2[i] < Integer.parseInt(numberOfGames.getText())) {
                                     eval = false;
                                 }
@@ -1241,16 +1243,16 @@ public class FEStatePane extends JPanel {
         } catch (CloneNotSupportedException e1) {
             e1.printStackTrace();
         }
-        String FilePath = "C:\\Users\\kynan\\Documents\\OneDrive\\rtsResearch\\microrts-master\\microrts-master\\maps\\Standard\\Standard1";
+        String FilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\microrts-master\\maps\\Standard\\Standard1";
         if (round == 1) {
             Arrays.fill(scoreR1, 0);
             Arrays.fill(gamesWithKillerR1, 0);
             Arrays.fill(totalKillerTime, 0);
             Arrays.fill(gamesPlayedR1, 0);
             Arrays.fill(gamesWonWithKillerR1, 0); 
-            FilePath = "C:\\Users\\kynan\\Documents\\OneDrive\\rtsResearch\\microrts-master\\microrts-master\\maps\\Standard\\Standard1";
+            FilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\microrts-master\\maps\\Standard\\Standard1";
         } else if (round == 2) {
-            FilePath = "C:\\Users\\kynan\\Documents\\OneDrive\\rtsResearch\\microrts-master\\microrts-master\\maps\\Standard\\Standard3";
+            FilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\microrts-master\\maps\\Standard\\Standard3";
             Arrays.fill(scoreR2, 0);
             Arrays.fill(gamesPlayedR2, 0);
             Arrays.fill(gamesWithKiller0, 0);
@@ -1290,12 +1292,8 @@ public class FEStatePane extends JPanel {
         unitTrials.add(trial6);
         Runnable trial7 = makeRunnable(7);
         unitTrials.add(trial7);
-        Runnable trial8 = makeRunnable(8);
-        unitTrials.add(trial8);
-        Runnable trial9 = makeRunnable(9);
-        unitTrials.add(trial9);
                 
-        for (int j = 0; j < 10; j++){
+        for (int j = 0; j < 8; j++){
             for (int k = 0; k < Integer.parseInt(numberOfGames.getText()); k++){
                 trialRuns.execute(unitTrials.get(j));
             }            
@@ -1309,7 +1307,7 @@ public class FEStatePane extends JPanel {
         textArea.append(laps + " laps done\n");
         float newScore;
 
-        for (int i = 0; i < 10; i++){
+        for (int i = 0; i < 8; i++){
             newScore = scoreR1[i] + scoreR2[i];
             if (newScore > bestScore) {
                 //formerBest = (UnitType) bestKiller.clone();
@@ -1333,7 +1331,7 @@ public class FEStatePane extends JPanel {
             e.printStackTrace();
         }
         
-        String testFilePath = "C:\\Users\\kynan\\Documents\\OneDrive\\rtsResearch\\MicroRTS\\BestUnits.csv";
+        String testFilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\MicroRTS\\BestUnits.csv";
         File testFile = new File(testFilePath);
         try {
             Writer testOutputFile = new FileWriter(testFile, true);
@@ -1381,8 +1379,6 @@ public class FEStatePane extends JPanel {
         UnitType temp5 = (UnitType)inputKiller.clone();
         UnitType temp6 = (UnitType)inputKiller.clone();
         UnitType temp7 = (UnitType)inputKiller.clone();
-        UnitType temp8 = (UnitType)inputKiller.clone();
-        UnitType temp9 = (UnitType)inputKiller.clone();
 
         //for cost
         temp0.cost += 1;
@@ -1398,45 +1394,40 @@ public class FEStatePane extends JPanel {
         if ((inputKiller.hp - 1) > 0){
             temp3.hp -= 1;            
         }
-        killerOptions.add(temp3);
-          
-        //for min damage
-        temp4.minDamage += 1;
-        if (temp4.minDamage > inputKiller.maxDamage){
-            temp4.maxDamage += 1;
-        }
-        killerOptions.add(temp4);
-        if ((inputKiller.minDamage - 1) >= 0){
-            temp5.minDamage -= 1;            
-        }
-        killerOptions.add(temp5);        
+        killerOptions.add(temp3);     
 
         //for max damage
-        temp6.maxDamage += 1;
-        killerOptions.add(temp6);
-        if ((inputKiller.maxDamage - 1) >= inputKiller.minDamage){
-            temp7.maxDamage -= 1;
-        } else{
-            temp7.maxDamage -= 1;
-            temp7.minDamage -= 1;
-        }
-        killerOptions.add(temp7);        
+        temp4.maxDamage += 1;
+        temp4.minDamage = temp4.maxDamage;
+        killerOptions.add(temp4);
+        if ((inputKiller.maxDamage - 1) > 0){
+            temp5.maxDamage -= 1;
+            temp5.minDamage = temp5.maxDamage;
+        } 
+        killerOptions.add(temp5);        
 
         //for attack range
-        temp8.attackRange += 1;
-        killerOptions.add(temp8);
+        temp6.attackRange += 1;
+        killerOptions.add(temp6);
         if ((inputKiller.attackRange - 1) > 0){
-            temp9.attackRange -= 1;
+            temp7.attackRange -= 1;
         }
-        killerOptions.add(temp9);
+        killerOptions.add(temp7);
 
     }
 
-    // used to determine the score.  Easy to update when put here
-    float FinalScore(float appear, float disappear, int time) {
+    // used to determine the score for round 1
+    float FinalScoreR1(float appear, float disappear, int time) {
 
         float score = (disappear - appear) / time;
 
+        return score;
+    }
+
+    // used to determine the score for round 2
+    float FinalScoreR2(float gamesWon0, float gamesWKiller0, float gamesWKiller1) {
+        float tempScore = gamesWon0 / (gamesWKiller0 + gamesWKiller1);
+        float score = 1f - Math.abs(0.5f - tempScore);
         return score;
     }
 }
