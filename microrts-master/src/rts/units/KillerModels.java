@@ -44,17 +44,12 @@ public class KillerModels {
         killer.name = "Killer";            
         killer.cost = 1 + random.nextInt(3);            
         killer.hp = 1 + random.nextInt(4);            
-        killer.minDamage = 1 + random.nextInt(2);
+        killer.minDamage = 1;
         killer.maxDamage = 1 + random.nextInt(2);
-        if (killer.minDamage > killer.maxDamage){
-            while (killer.minDamage > killer.maxDamage){
-                killer.minDamage -= 1;
-            }
-        }
         killer.attackRange = 1 + random.nextInt(3);            
         killer.produceTime = 100;            
-        killer.moveTime = 10;            
-        killer.attackTime = 5;            
+        killer.moveTime = 5 + random.nextInt(10);            
+        killer.attackTime = 2 + random.nextInt(5);            
         killer.isResource = false;            
         killer.isStockpile = false;            
         killer.canHarvest = false;            

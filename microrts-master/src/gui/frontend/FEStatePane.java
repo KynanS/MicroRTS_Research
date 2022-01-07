@@ -73,6 +73,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -112,7 +113,6 @@ import ai.mcts.uct.DownsamplingUCT;
 import ai.scv.SCV;
 
 /**
- *
  * @author santi
  * Editor: kynan
  */
@@ -131,9 +131,6 @@ public class FEStatePane extends JPanel {
                                 new EvaluationFunctionForwarding(new SimpleEvaluationFunction()),
                                 new SimpleOptEvaluationFunction()};
 
-    /**
-     *
-     */
     public static Class AIs[] = {
                    BS3_NaiveMCTS.class,
                    PassiveAI.class,
@@ -234,7 +231,7 @@ public class FEStatePane extends JPanel {
     List<Runnable> unitTrials = new ArrayList<Runnable>();
     float bestScore = 0;
     UnitType bestKiller;
-    //UnitType formerBest = (UnitType) mainTable.killer.clone();
+    List<UnitType> oldKillers = new ArrayList<UnitType>();
     int laps = 0;
     int round = 1;
     int game = 1;
@@ -247,6 +244,7 @@ public class FEStatePane extends JPanel {
     int bestGamesMadeBoth = 0;
     int bestGamesWonWith0 = 0;
     int bestGamesWonWith1 = 0;
+    Random random = new Random();
 
     // variables for round 1
     float scoreR1[] = new float[8];
@@ -1310,7 +1308,7 @@ public class FEStatePane extends JPanel {
         for (int i = 0; i < 8; i++){
             newScore = scoreR1[i] + scoreR2[i];
             if (newScore > bestScore) {
-                //formerBest = (UnitType) bestKiller.clone();
+                
                 bestKiller = killerOptions.get(i);
                 bestScore = newScore;
                 bestScoreR1 = scoreR1[i];
@@ -1330,6 +1328,7 @@ public class FEStatePane extends JPanel {
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();
         }
+        
         
         String testFilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\MicroRTS\\BestUnits.csv";
         File testFile = new File(testFilePath);
@@ -1379,6 +1378,8 @@ public class FEStatePane extends JPanel {
         UnitType temp5 = (UnitType)inputKiller.clone();
         UnitType temp6 = (UnitType)inputKiller.clone();
         UnitType temp7 = (UnitType)inputKiller.clone();
+        UnitType temp8 = (UnitType)inputKiller.clone();
+        UnitType temp9 = (UnitType)inputKiller.clone();
 
         //for cost
         temp0.cost += 1;
@@ -1408,6 +1409,14 @@ public class FEStatePane extends JPanel {
 
         //for attack range
         temp6.attackRange += 1;
+        killerOptions.add(temp6);
+        if ((inputKiller.attackRange - 1) > 0){
+            temp7.attackRange -= 1;
+        }
+        killerOptions.add(temp7);
+
+        //for attack speed
+        temp8.attackTime += 2 + random.nextInt(4);
         killerOptions.add(temp6);
         if ((inputKiller.attackRange - 1) > 0){
             temp7.attackRange -= 1;
