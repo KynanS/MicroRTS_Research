@@ -245,22 +245,23 @@ public class FEStatePane extends JPanel {
     int bestGamesWonWith0 = 0;
     int bestGamesWonWith1 = 0;
     Random random = new Random();
+    float temperature = 1;
 
     // variables for round 1
-    float scoreR1[] = new float[8];
-    int gamesWithKillerR1[] = new int[8];
-    int totalKillerTime[] = new int[8];
-    int gamesPlayedR1[] = new int[8];
-    int gamesWonWithKillerR1[] = new int[8];
+    float scoreR1[] = new float[12];
+    int gamesWithKillerR1[] = new int[12];
+    int totalKillerTime[] = new int[12];
+    int gamesPlayedR1[] = new int[12];
+    int gamesWonWithKillerR1[] = new int[12];
 
     // variables for round 2
-    float scoreR2[] = new float[8];
-    int gamesWithKiller0[] = new int[8];
-    int gamesWithKiller1[] = new int[8];
-    int gamesWithKillerBoth[] = new int[8];
-    int gamesPlayedR2[] = new int[8];
-    int gamesWonWithKiller0[] = new int[8];
-    int gamesWonWithKiller1[] = new int[8];    
+    float scoreR2[] = new float[12];
+    int gamesWithKiller0[] = new int[12];
+    int gamesWithKiller1[] = new int[12];
+    int gamesWithKillerBoth[] = new int[12];
+    int gamesPlayedR2[] = new int[12];
+    int gamesWonWithKiller0[] = new int[12];
+    int gamesWonWithKiller1[] = new int[12];    
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public FEStatePane() throws Exception {        
@@ -963,13 +964,13 @@ public class FEStatePane extends JPanel {
     public Runnable makeRunnable(int versionNum){
         Runnable r = new Runnable() {  
             public void run() {
-                try {
-                    
+                try {                    
                     int rVersion = versionNum;
                     boolean player0 = false;
                     boolean player1 = false;
                     boolean both = false;
                     mainTable.killer = killerOptions.get(versionNum);
+
                     AI ai1 = createAI(aiComboBox[0].getSelectedIndex(), 0, mainTable);
                     AI ai2 = createAI(aiComboBox[1].getSelectedIndex(), 1, mainTable);
                     int PERIOD1 = Integer.parseInt(defaultDelayField.getText());
@@ -977,15 +978,13 @@ public class FEStatePane extends JPanel {
                     JFormattedTextField t1 = (JFormattedTextField)AIOptionsPanelComponents[0].get("TimeBudget");
                     JFormattedTextField t2 = (JFormattedTextField)AIOptionsPanelComponents[1].get("TimeBudget");
                     if (t1!=null) PERIOD1 = Integer.parseInt(t1.getText());
-                    if (t2!=null) PERIOD2 = Integer.parseInt(t2.getText());
-                    
+                    if (t2!=null) PERIOD2 = Integer.parseInt(t2.getText());                    
                     int PERIOD = PERIOD1 + PERIOD2;
                     if (!slowDownBox.isSelected()) {
                         PERIOD = 1;
                     }
                     int MAXCYCLES = Integer.parseInt(maxCyclesField.getText());
-                    GameState gs = statePanel.getState().clone();
-                    
+                    GameState gs = statePanel.getState().clone();                    
                     ai1.preGameAnalysis(gs, -1);
                     ai2.preGameAnalysis(gs, -1);
                     
@@ -993,7 +992,6 @@ public class FEStatePane extends JPanel {
                     List<Integer> killerAppear = new ArrayList<Integer>();
                     List<Integer> killerDisappear = new ArrayList<Integer>();
                     boolean wasKillerMade = false;
-                    int totalGameTime = 0;
                     JFrame w = null;
                     Trace trace = null;
                     if (saveTraceBox.isSelected()) {
@@ -1001,7 +999,6 @@ public class FEStatePane extends JPanel {
                         TraceEntry te = new TraceEntry(gs.getPhysicalGameState().clone(),gs.getTime());
                         trace.addEntry(te);                        
                     }
-
                     boolean isMouseController = false;
                     if (ai1 instanceof MouseController) isMouseController = true;
                     if (ai2 instanceof MouseController) isMouseController = true;
@@ -1057,7 +1054,6 @@ public class FEStatePane extends JPanel {
                                 gs.issueSafe(pa1);
                                 gs.issueSafe(pa2);
                             }
-
                             // check to see if a Killer was made for round 1
                             if (round == 1) {
                                 if (gs.getPhysicalGameState().killerMade() && !wasKillerMade) {
@@ -1072,8 +1068,7 @@ public class FEStatePane extends JPanel {
                                     killerDisappear.add(gs.getTime());
                                     wasKillerMade = false;
                                 }
-                            }      
-                            
+                            }                                  
                             // check to see if killer was made for round 2
                             if (round == 2) {
                                 List<Unit> killers = gs.getPhysicalGameState().killerTeam();
@@ -1093,8 +1088,7 @@ public class FEStatePane extends JPanel {
                                         }
                                     }
                                 }
-                            }
-                            
+                            }                            
                             // simulate:
                             synchronized(gs) {
                                 gameover = gs.cycle();
@@ -1109,7 +1103,6 @@ public class FEStatePane extends JPanel {
                         }
                         if (!w.isVisible()) break;  // if the user has closed the window
                     }while(!gameover && gs.getTime()<MAXCYCLES);
-
                     if (gameover){
                         // close the window
                         w.dispose();
@@ -1118,24 +1111,20 @@ public class FEStatePane extends JPanel {
                         // game over steps for round 1
                         if (round == 1) {
                             killerDisappear.add(gs.getTime());
-                            totalGameTime += gs.getTime();
                             gamesPlayedR1[rVersion]++;
-
                             // add to the score if player 0 won and killer was made
                             if (gs.getPhysicalGameState().winner() == 0 && !killerAppear.isEmpty()) {
-                                for (int i = 0; i < killerAppear.size(); i++) {                                
+                                for (int i = 0; i < killerAppear.size(); i++) { 
+                                    gamesWonWithKillerR1[rVersion]++;                               
                                     scoreR1[rVersion] += 1f * FinalScoreR1(killerDisappear.get(i).floatValue(), killerAppear.get(i).floatValue(), gs.getTime());                                    
                                 }   
-                                gamesWonWithKillerR1[rVersion]++;
                             }
-
                             // subract to the score if player 1 won/there was a draw and killer was made
                             else if (!killerAppear.isEmpty()) {
                                 for (int i = 0; i < killerAppear.size(); i++) {                                
                                     scoreR1[rVersion] -= 1f * FinalScoreR1(killerDisappear.get(i).floatValue(), killerAppear.get(i).floatValue(), gs.getTime());
                                 }
                             }
-
                             // don't add to the score if killer wasn't made regardless of win, loss or draw
                             // if all the games for this unit in this round have been played, record the results
                             if (gamesPlayedR1[rVersion] == Integer.parseInt(numberOfGames.getText())){
@@ -1144,7 +1133,7 @@ public class FEStatePane extends JPanel {
                                 scoreR1[rVersion] = scoreR1[rVersion] / (gamesWithKillerR1[rVersion]);
                                 try {
                                     Writer testOutputFile = new FileWriter(testFile, true);
-                                    testOutputFile.append("Killer has cost: "+ killerOptions.get(versionNum).cost + " hp: " + killerOptions.get(versionNum).hp + " min Damage: " + killerOptions.get(versionNum).minDamage + " max Damage: " + killerOptions.get(versionNum).maxDamage + " attack range: " + killerOptions.get(versionNum).attackRange + "\n");
+                                    testOutputFile.write("Killer has cost: "+ killerOptions.get(versionNum).cost + " hp: " + killerOptions.get(versionNum).hp + " max Damage: " + killerOptions.get(versionNum).maxDamage + " attack range: " + killerOptions.get(versionNum).attackRange + " move speed: " + killerOptions.get(versionNum).moveTime + " attack speed: " + killerOptions.get(versionNum).attackTime + "\n");
                                     testOutputFile.write("The number of games where killer was made was: " + gamesWithKillerR1[rVersion] + "\n");
                                     testOutputFile.write("The number of games won by Player 0 with killer: " + gamesWonWithKillerR1[rVersion] + "\n");
                                     testOutputFile.write("The score was: " + scoreR1[rVersion] + "\n");
@@ -1156,7 +1145,7 @@ public class FEStatePane extends JPanel {
                             }
                             // check to see if it's time to start round 2
                             boolean round2 = true;
-                            for (int i = 0; i < 8; i++) {
+                            for (int i = 0; i < 12; i++) {
                                 if (gamesPlayedR1[i] < Integer.parseInt(numberOfGames.getText())) {
                                     round2 = false;
                                 }
@@ -1166,7 +1155,6 @@ public class FEStatePane extends JPanel {
                                 setUpLap();
                             } 
                         }
-
                         else if (round == 2) {
                             gamesPlayedR2[rVersion]++;
                             // if player 0 wins and a player made killer
@@ -1177,7 +1165,6 @@ public class FEStatePane extends JPanel {
                             if (gs.getPhysicalGameState().winner() == 1 && (player0 || player1)) {
                                 gamesWonWithKiller1[rVersion]++;
                             }
-
                             // record findings
                             if (gamesPlayedR2[rVersion] == Integer.parseInt(numberOfGames.getText())){
                                 String testFilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\MicroRTS\\tests.csv";
@@ -1187,8 +1174,8 @@ public class FEStatePane extends JPanel {
                                 Integer gwk1 = gamesWithKiller1[rVersion] - gamesWithKillerBoth[rVersion];
                                 scoreR2[rVersion] = FinalScoreR2(gw0.floatValue(), gwk0.floatValue(), gwk1.floatValue());
                                 try {
-                                    Writer testOutputFile = new FileWriter(testFile, true);
-                                    testOutputFile.append("Killer has cost: "+ killerOptions.get(versionNum).cost + " hp: " + killerOptions.get(versionNum).hp + " min Damage: " + killerOptions.get(versionNum).minDamage + " max Damage: " + killerOptions.get(versionNum).maxDamage + " attack range: " + killerOptions.get(versionNum).attackRange + "\n");
+                                    Writer testOutputFile = new FileWriter(testFile, true);                                    
+                                    testOutputFile.write("Killer has cost: "+ killerOptions.get(versionNum).cost + " hp: " + killerOptions.get(versionNum).hp + " max Damage: " + killerOptions.get(versionNum).maxDamage + " attack range: " + killerOptions.get(versionNum).attackRange + " move speed: " + killerOptions.get(versionNum).moveTime + " attack speed: " + killerOptions.get(versionNum).attackTime + "\n");
                                     testOutputFile.write("The number of games where killer was made by player 0 was: " + gamesWithKiller0[rVersion] + "\n");
                                     testOutputFile.write("The number of games where killer was made by player 1 was: " + gamesWithKiller1[rVersion] + "\n");
                                     testOutputFile.write("The number of games where killer was made by both players was: " + gamesWithKillerBoth[rVersion] + "\n");
@@ -1202,7 +1189,7 @@ public class FEStatePane extends JPanel {
                                     e.printStackTrace();
                                 }
                             boolean eval = true;
-                            for (int i = 0; i < 8; i++) {
+                            for (int i = 0; i < 12; i++) {
                                 if (gamesPlayedR2[i] < Integer.parseInt(numberOfGames.getText())) {
                                     eval = false;
                                 }
@@ -1212,8 +1199,7 @@ public class FEStatePane extends JPanel {
                                 evaluate();
                             }
                         }
-                    }
-                    
+                    }                    
                     if (trace!=null) {
                         TraceEntry te = new TraceEntry(gs.getPhysicalGameState().clone(), gs.getTime());
                         trace.addEntry(te);                
@@ -1223,8 +1209,7 @@ public class FEStatePane extends JPanel {
                         trace.toxml(xml);
                         xml.flush();
                     }   
-                }                                 
-                    
+                }         
                 } catch(Exception ex) {
                     ex.printStackTrace();
                 }
@@ -1271,7 +1256,7 @@ public class FEStatePane extends JPanel {
         } catch (Exception ex) {
             ex.printStackTrace();
         }       
-        ExecutorService trialRuns = Executors.newFixedThreadPool(10);
+        ExecutorService trialRuns = Executors.newFixedThreadPool(12);
                                                                             
         //all the different versions of killer in their own thread so as to be able to run and test them all
         Runnable trial0 = makeRunnable(0);  
@@ -1290,8 +1275,16 @@ public class FEStatePane extends JPanel {
         unitTrials.add(trial6);
         Runnable trial7 = makeRunnable(7);
         unitTrials.add(trial7);
+        Runnable trial8 = makeRunnable(8);
+        unitTrials.add(trial8);
+        Runnable trial9 = makeRunnable(9);
+        unitTrials.add(trial9);
+        Runnable trial10 = makeRunnable(10);
+        unitTrials.add(trial10);
+        Runnable trial11 = makeRunnable(11);
+        unitTrials.add(trial11);
                 
-        for (int j = 0; j < 8; j++){
+        for (int j = 0; j < 12; j++){
             for (int k = 0; k < Integer.parseInt(numberOfGames.getText()); k++){
                 trialRuns.execute(unitTrials.get(j));
             }            
@@ -1304,11 +1297,11 @@ public class FEStatePane extends JPanel {
         laps++;
         textArea.append(laps + " laps done\n");
         float newScore;
+        boolean bestest = true;
 
-        for (int i = 0; i < 8; i++){
+        for (int i = 0; i < 12; i++){
             newScore = scoreR1[i] + scoreR2[i];
-            if (newScore > bestScore) {
-                
+            if (SimScore(bestScore, newScore, temperature) >= random.nextFloat()) {                
                 bestKiller = killerOptions.get(i);
                 bestScore = newScore;
                 bestScoreR1 = scoreR1[i];
@@ -1320,9 +1313,9 @@ public class FEStatePane extends JPanel {
                 bestGamesMadeBoth = gamesWithKillerBoth[i];
                 bestGamesWonWith0 = gamesWonWithKiller0[i];
                 bestGamesWonWith1 = gamesWonWithKiller1[i];
+                bestest = false;
             }            
         }
-
         try {
             mainTable.killer = (UnitType) bestKiller.clone();
         } catch (CloneNotSupportedException e) {
@@ -1335,7 +1328,7 @@ public class FEStatePane extends JPanel {
         try {
             Writer testOutputFile = new FileWriter(testFile, true);
             testOutputFile.write("After " + laps + " laps have occured, the best unit found is: \n");
-            testOutputFile.write("Killer has cost: "+ bestKiller.cost + " hp: " + bestKiller.hp + " min Damage: " + bestKiller.minDamage + " max Damage: " + bestKiller.maxDamage + " attack range: " + bestKiller.attackRange + "\n");
+            testOutputFile.write("Killer has cost: "+ bestKiller.cost + " hp: " + bestKiller.hp + " max Damage: " + bestKiller.maxDamage + " attack range: " + bestKiller.attackRange + " move speed: " + bestKiller.moveTime + " attack speed: " + bestKiller.attackTime + "\n");
             testOutputFile.write("The total score was : " + bestScore + "\n");
             testOutputFile.write("The score for round 1 was: " + bestScoreR1 + "\n");
             testOutputFile.write("The unit was made in: " + bestGamesMadeR1 + " games" + "\n");
@@ -1351,17 +1344,19 @@ public class FEStatePane extends JPanel {
         catch (IOException e) {
             e.printStackTrace();
         }
-        // make sure there was an improvement
-        /*
-        if (formerBest == bestKiller) {
-            laps = Integer.parseInt(numberOfLaps.getText());
-            textArea.append("No better neighbors\n");
-        }
-        */
         if (laps == Integer.parseInt(numberOfLaps.getText())){
             textArea.append("laps are complete\n");
             return;
         }
+        if (temperature <= 0) {
+            textArea.append("games have run cold\n");
+            return;
+        }
+        if (bestest) {
+            textArea.append("best unit detected\n");
+            return;
+        }
+        temperature -= 1f/(killerOptions.size());
         round = 1;
         setUpLap();  
     }
@@ -1380,6 +1375,8 @@ public class FEStatePane extends JPanel {
         UnitType temp7 = (UnitType)inputKiller.clone();
         UnitType temp8 = (UnitType)inputKiller.clone();
         UnitType temp9 = (UnitType)inputKiller.clone();
+        UnitType temp10 = (UnitType)inputKiller.clone();
+        UnitType temp11 = (UnitType)inputKiller.clone();
 
         //for cost
         temp0.cost += 1;
@@ -1415,13 +1412,23 @@ public class FEStatePane extends JPanel {
         }
         killerOptions.add(temp7);
 
-        //for attack speed
-        temp8.attackTime += 2 + random.nextInt(4);
-        killerOptions.add(temp6);
-        if ((inputKiller.attackRange - 1) > 0){
-            temp7.attackRange -= 1;
+        //for move speed
+        temp8.moveTime += 3 + random.nextInt(4);
+        killerOptions.add(temp8);
+        temp9.moveTime -= (3 + random.nextInt(4));
+        if (temp9.moveTime <= 0) {
+            temp9.moveTime = 5;
         }
-        killerOptions.add(temp7);
+        killerOptions.add(temp9);
+
+        //for attack speed
+        temp10.attackTime += 2 + random.nextInt(4);
+        killerOptions.add(temp10);
+        temp11.attackTime -= (2 + random.nextInt(4));
+        if (temp11.attackTime <= 0) {
+            temp11.attackTime = 1;
+        }
+        killerOptions.add(temp11);
 
     }
 
@@ -1438,5 +1445,17 @@ public class FEStatePane extends JPanel {
         float tempScore = gamesWon0 / (gamesWKiller0 + gamesWKiller1);
         float score = 1f - Math.abs(0.5f - tempScore);
         return score;
+    }
+
+    // used to determine the simulated annealing score
+    float SimScore(float currentScore, float neighborScore, float currentTemperature) {
+        float sim = 1f;
+        if (neighborScore > currentScore) {
+            return sim;
+        }
+        else {
+            sim = currentTemperature - Math.abs(currentScore - neighborScore);
+            return sim;
+        }
     }
 }
