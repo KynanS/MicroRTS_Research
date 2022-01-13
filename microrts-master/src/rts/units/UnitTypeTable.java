@@ -301,12 +301,10 @@ public class UnitTypeTable  {
         light.canMove = true;
         light.canAttack = true;
         light.sightRadius = 2;
-
         return(light);
     }
-
+    
     public UnitType getHeavy(int version){
-
         UnitType heavy = new UnitType();
         heavy.name = "Heavy";
         switch(version) {
@@ -341,12 +339,10 @@ public class UnitTypeTable  {
         heavy.canMove = true;
         heavy.canAttack = true;
         heavy.sightRadius = 2;
-
         return(heavy);
     }
 
     public UnitType getRanged(int version){
-
         UnitType ranged = new UnitType();
         ranged.name = "Ranged";
         ranged.cost = 2;
@@ -371,7 +367,6 @@ public class UnitTypeTable  {
         ranged.canMove = true;
         ranged.canAttack = true;
         ranged.sightRadius = 3;
-
         return(ranged);
     }
 
