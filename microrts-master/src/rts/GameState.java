@@ -17,6 +17,8 @@ import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
+import rts.Causes;
+import rts.Effects;
 import rts.units.Unit;
 import rts.units.UnitType;
 import rts.units.UnitTypeTable;
@@ -37,6 +39,7 @@ public class GameState {
     protected PhysicalGameState pgs;
     protected HashMap<Unit,UnitActionAssignment> unitActions = new LinkedHashMap<>();
     protected UnitTypeTable utt;
+    protected Causes cause;  // Object used to track whether the right cause event has happened
 
     /**
      * Initializes the GameState with a PhysicalGameState and a UnitTypeTable

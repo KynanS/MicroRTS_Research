@@ -99,6 +99,16 @@ public class UnitType implements Cloneable{
      * Can a unit of this type attack?
      */
     public boolean canAttack = true;  
+
+    /**
+     * Unit Cause ID
+     */
+    public int causeID = 0;
+
+    /**
+     * Unit Effect ID
+     */
+    public int effectID = 0;
     
     /**
      * Units that this type of unit can produce

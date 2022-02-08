@@ -56,6 +56,8 @@ public class KillerModels {
         killer.canMove = true;            
         killer.canAttack = true;            
         killer.sightRadius = 3;
+        killer.causeID = 0;
+        killer.effectID = 0;
     	
     }
     /**

@@ -365,7 +365,13 @@ public class UnitAction {
                     }
                     other.setHitPoints(other.getHitPoints() - damage);
                     if (other.getHitPoints() <= 0) {
-                        s.removeUnit(other);
+                        // if cause is cause type 0
+                        if (other.getType().name == "Killer" && other.getType().causeID == 0) {
+                            Effect(other, u, s, pgs);
+                        }
+                        else {
+                            s.removeUnit(other);
+                        }                        
                     }
                 }
             }
@@ -651,6 +657,15 @@ public class UnitAction {
         }
 
         return ua;
+    }
+
+    public void Effect(Unit effected, Unit effector, GameState game, PhysicalGameState pgs) {
+        // return the unit that died's resources to the player
+        if (effected.getType().effectID == 0) {
+            Player p = pgs.getPlayer(effected.getPlayer());
+            p.setResources(p.getResources() + effected.getType().cost);            
+            game.removeUnit(effected);
+        }
     }
 
 }
