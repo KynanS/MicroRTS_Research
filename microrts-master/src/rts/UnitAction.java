@@ -3,6 +3,7 @@ package rts;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Random;
 import org.jdom.Element;
@@ -14,6 +15,12 @@ import util.XMLWriter;
 /**
  *
  * @author santi
+ * @editor kynan
+ * CauseID reference
+ * 0 is when the unit dies
+ * 1 is when the unit takes damage
+ * 2 is when the unit deals damage
+ * 3 is when the unit has attacked a certain number of times
  */
 public class UnitAction {
 
@@ -358,14 +365,31 @@ public class UnitAction {
                 Unit other = pgs.getUnitAt(x, y);
                 if (other != null) {
                     int damage;
+                    // cause type 2, where killer deals damage
+                    if (u.getType().name == "Killer" && u.getType().causeID == 2) {
+                        Effect(u, other, s, pgs); // to make life easier, send other and u through backwards for this Effect call
+                    }
+                    // cause type 3, where killer gets a boost every 3 times it attacks
+                    if (u.getType().name == "Killer" && u.getType().causeID == 3) {
+                        u.getType().attackCount++;
+                        if (u.getType().attackCount == 3) {
+                            u.getType().attackCount = 0;
+                            Effect(u, other, s, pgs); // to make life easier, send other and u through backwards for this Effect call
+                        }
+                        
+                    }
                     if (u.getMinDamage() == u.getMaxDamage()) {
                         damage = u.getMinDamage();
                     } else {
                         damage = u.getMinDamage() + r.nextInt(1 + (u.getMaxDamage() - u.getMinDamage()));
                     }
                     other.setHitPoints(other.getHitPoints() - damage);
+                    // cause type 1, where killer takes damage
+                    if (other.getType().name == "Killer" && other.getType().causeID == 1) {
+                        Effect(other, u, s, pgs);
+                    }
                     if (other.getHitPoints() <= 0) {
-                        // if cause is cause type 0
+                        // cause type 0, where killer dies
                         if (other.getType().name == "Killer" && other.getType().causeID == 0) {
                             Effect(other, u, s, pgs);
                         }
@@ -655,17 +679,50 @@ public class UnitAction {
         if (ut != null) {
             ua.unitType = utt.getUnitType(ut);
         }
-
         return ua;
     }
 
     public void Effect(Unit effected, Unit effector, GameState game, PhysicalGameState pgs) {
-        // return the unit that died's resources to the player
+        
+        // return the unit resources to the player
         if (effected.getType().effectID == 0) {
             Player p = pgs.getPlayer(effected.getPlayer());
-            p.setResources(p.getResources() + effected.getType().cost);            
+            p.setResources(p.getResources() + effected.getType().cost);    
+        }
+        // do damage back or a second attack, depending on the effect
+        if (effected.getType().effectID == 1) {
+            int damage = effected.getMinDamage();
+            effector.setHitPoints(effector.getHitPoints() - damage);
+        }
+        // heal up unit
+        if (effected.getType().effectID == 2) {
+            if (!pgs.unitIDs.contains(effected.getID())) {
+                pgs.unitIDs.add(effected.getID());
+                //if the unit died then heal up to 3
+                if (effected.getType().causeID == 0) {
+                    effected.setHitPoints(1 + r.nextInt(3));
+                }
+                //if the unit was damaged then heal up to 3 more
+                else {
+                    effected.setHitPoints(effected.getHitPoints() + 1 + r.nextInt(3));
+                }                
+            } 
+        }
+        // boost the attack speed
+        if (effected.getType().effectID == 3) {
+            if (!pgs.unitIDs.contains(effected.getID())) {
+                pgs.unitIDs.add(effected.getID());
+                effected.getType().attackTime = effected.getType().attackTime / 2;
+            }
+            
+        }
+        // if the unit is supposed to die remove the unit
+        if (effected.getHitPoints() <= 0) {
             game.removeUnit(effected);
         }
+        if (effector.getHitPoints() <= 0) {
+            game.removeUnit(effector);
+        }     
+        return;
     }
-
 }

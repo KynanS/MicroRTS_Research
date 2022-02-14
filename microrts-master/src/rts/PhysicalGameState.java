@@ -42,6 +42,8 @@ public class PhysicalGameState {
     int terrain[];
     List<Player> players = new ArrayList<>();
     List<Unit> units = new LinkedList<>();
+    // list of units that have activated abilities. only sometimes used
+    public List<Long> unitIDs = new ArrayList<>();
 
     /**
      * Constructs the game state map from a XML

@@ -111,6 +111,10 @@ public class UnitType implements Cloneable{
     public int effectID = 0;
     
     /**
+     * attack count
+     */
+    public int attackCount = 0;
+    /**
      * Units that this type of unit can produce
      */
     public ArrayList<UnitType> produces = new ArrayList<>();
