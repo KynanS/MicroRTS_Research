@@ -100,6 +100,7 @@ import rts.PlayerActionGenerator;
 import rts.Trace;
 import rts.TraceEntry;
 import rts.UnitAction;
+import rts.units.KillerModels;
 import rts.units.Unit;
 import rts.units.UnitTypeTable;
 import rts.units.UnitType;
@@ -246,6 +247,7 @@ public class FEStatePane extends JPanel {
     int bestGamesWonWith1 = 0;
     Random random = new Random();
     float temperature = 1;
+    boolean newUnit = true;
 
     // variables for round 1
     float scoreR1[] = new float[16];
@@ -1133,10 +1135,8 @@ public class FEStatePane extends JPanel {
                                 scoreR1[rVersion] = scoreR1[rVersion] / (gamesWithKillerR1[rVersion]);
                                 try {
                                     Writer testOutputFile = new FileWriter(testFile, true);
-                                    testOutputFile.write("Killer has cost: "+ killerOptions.get(versionNum).cost + " hp: " + killerOptions.get(versionNum).hp + " max Damage: " + killerOptions.get(versionNum).maxDamage + " attack range: " + killerOptions.get(versionNum).attackRange + " move speed: " + killerOptions.get(versionNum).moveTime + " attack speed: " + killerOptions.get(versionNum).attackTime + "\n");
-                                    testOutputFile.write("The number of games where killer was made was: " + gamesWithKillerR1[rVersion] + "\n");
-                                    testOutputFile.write("The number of games won by Player 0 with killer: " + gamesWonWithKillerR1[rVersion] + "\n");
-                                    testOutputFile.write("The score was: " + scoreR1[rVersion] + "\n");
+                                    testOutputFile.write(laps + " | " + round + " | " + killerOptions.get(versionNum).cost + " | " + killerOptions.get(versionNum).hp + " | " + killerOptions.get(versionNum).maxDamage + " | " + killerOptions.get(versionNum).attackRange + " | " + killerOptions.get(versionNum).moveTime + " | " + killerOptions.get(versionNum).attackTime + " | " + killerOptions.get(versionNum).causeID + " | "+ killerOptions.get(versionNum).effectID + " | " + 
+                                    gamesWithKillerR1[rVersion] + " | " + gamesWonWithKillerR1[rVersion] + " | " + scoreR1[rVersion] + "\n");
                                     testOutputFile.close();                                
                                 }
                                 catch (IOException e) {
@@ -1145,7 +1145,7 @@ public class FEStatePane extends JPanel {
                             }
                             // check to see if it's time to start round 2
                             boolean round2 = true;
-                            for (int i = 0; i < 12; i++) {
+                            for (int i = 0; i < 16; i++) {
                                 if (gamesPlayedR1[i] < Integer.parseInt(numberOfGames.getText())) {
                                     round2 = false;
                                 }
@@ -1175,13 +1175,10 @@ public class FEStatePane extends JPanel {
                                 scoreR2[rVersion] = FinalScoreR2(gw0.floatValue(), gwk0.floatValue(), gwk1.floatValue());
                                 try {
                                     Writer testOutputFile = new FileWriter(testFile, true);                                    
-                                    testOutputFile.write("Killer has cost: "+ killerOptions.get(versionNum).cost + " hp: " + killerOptions.get(versionNum).hp + " max Damage: " + killerOptions.get(versionNum).maxDamage + " attack range: " + killerOptions.get(versionNum).attackRange + " move speed: " + killerOptions.get(versionNum).moveTime + " attack speed: " + killerOptions.get(versionNum).attackTime + "\n");
-                                    testOutputFile.write("The number of games where killer was made by player 0 was: " + gamesWithKiller0[rVersion] + "\n");
-                                    testOutputFile.write("The number of games where killer was made by player 1 was: " + gamesWithKiller1[rVersion] + "\n");
-                                    testOutputFile.write("The number of games where killer was made by both players was: " + gamesWithKillerBoth[rVersion] + "\n");
-                                    testOutputFile.write("The number of games won by Player 0 with killer: " + gamesWonWithKiller0[rVersion] + "\n");
-                                    testOutputFile.write("The number of games won by Player 1 with killer: " + gamesWonWithKiller1[rVersion] + "\n");
-                                    testOutputFile.write("The score was: " + scoreR2[rVersion] + "\n");
+                                    testOutputFile.write(laps + " | " + round + " | " + killerOptions.get(versionNum).cost + " | " + killerOptions.get(versionNum).hp + " | " + killerOptions.get(versionNum).maxDamage + " | " + killerOptions.get(versionNum).attackRange + " | " + 
+                                    killerOptions.get(versionNum).moveTime + " | " + killerOptions.get(versionNum).attackTime + " | " + killerOptions.get(versionNum).causeID + " | " + killerOptions.get(versionNum).effectID
+                                    + " | " + gamesWithKiller0[rVersion] + " | " + gamesWithKiller1[rVersion] + " | " + gamesWithKillerBoth[rVersion] + " | " + 
+                                    gamesWonWithKiller0[rVersion] + " | " + gamesWonWithKiller1[rVersion] + " | " + scoreR2[rVersion] + "\n");
                                     testOutputFile.write("\n");
                                     testOutputFile.close();                                
                                 }
@@ -1189,7 +1186,7 @@ public class FEStatePane extends JPanel {
                                     e.printStackTrace();
                                 }
                             boolean eval = true;
-                            for (int i = 0; i < 12; i++) {
+                            for (int i = 0; i < 16; i++) {
                                 if (gamesPlayedR2[i] < Integer.parseInt(numberOfGames.getText())) {
                                     eval = false;
                                 }
@@ -1219,6 +1216,23 @@ public class FEStatePane extends JPanel {
     }
     //set things up to run a lap of tests
     public void setUpLap(){
+        if (newUnit) {
+            newUnit = false;
+            // file for full best unit stats
+            String testFilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\MicroRTS\\BestUnits.csv";
+            File testFile = new File(testFilePath);
+            try {
+                Writer testOutputFile = new FileWriter(testFile, true);
+                testOutputFile.write("New Unit" +  "\n");
+                testOutputFile.write(mainTable.killer.cost + " | " + mainTable.killer.hp + " | " + mainTable.killer.maxDamage + " | " + 
+                mainTable.killer.attackRange + " | " + mainTable.killer.moveTime + " | " + mainTable.killer.attackTime + " | " + 
+                mainTable.killer.causeID + " | " + mainTable.killer.effectID + "\n");
+                testOutputFile.close();
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         try {
             MovingCompany(mainTable.killer);
         } catch (CloneNotSupportedException e1) {
@@ -1326,7 +1340,11 @@ public class FEStatePane extends JPanel {
             } 
         } else {
             textArea.append("Best unit found \n");
-            return;
+            newUnit = true;
+            bestScore = 0;
+            KillerModels newKiller = new KillerModels();
+            mainTable.killer = newKiller.getKiller();
+            setUpLap();
         }
         //int nextKiller = random.nextInt(12);
         // try {
@@ -1376,18 +1394,6 @@ public class FEStatePane extends JPanel {
                 " | " + bestGamesMadeR1 + " | " + bestGamesWonWithR1 + " | " + bestScoreR2 + " | " + bestGamesMade0 + 
                 " | " + bestGamesMade1 + " | " + bestGamesMadeBoth + " | " + bestGamesWonWith0 + " | " + bestGamesWonWith1 + "\n");
             testOutputFile.close();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        // file for full best unit stats summarized
-        String testFilePath1 = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\MicroRTS\\BestUnitsSummary.csv";
-        File testFile1 = new File(testFilePath1);
-        try {
-            Writer testOutputFile1 = new FileWriter(testFile1, true);
-            testOutputFile1.write(laps + " | " + bestKiller.cost + " | " + bestKiller.hp + " | " + bestKiller.maxDamage + " | " + bestKiller.attackRange + " | " + bestKiller.moveTime + " | " + 
-            bestKiller.attackTime + " | " + bestKiller.causeID + " | " + bestKiller.effectID + "\n");
-            testOutputFile1.close();
         }
         catch (IOException e) {
             e.printStackTrace();
