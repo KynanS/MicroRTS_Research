@@ -1340,6 +1340,7 @@ public class FEStatePane extends JPanel {
             } 
         } else {
             textArea.append("Best unit found \n");
+            round = 1;
             newUnit = true;
             bestScore = 0;
             KillerModels newKiller = new KillerModels();
