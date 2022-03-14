@@ -1233,13 +1233,13 @@ public class FEStatePane extends JPanel {
                 e.printStackTrace();
             }
         }
-        try {
-            MovingCompany(mainTable.killer);
-        } catch (CloneNotSupportedException e1) {
-            e1.printStackTrace();
-        }
         String FilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\microrts-master\\maps\\Standard\\Standard1";
         if (round == 1) {
+            try {
+                MovingCompany(mainTable.killer);
+            } catch (CloneNotSupportedException e1) {
+                e1.printStackTrace();
+            }
             Arrays.fill(scoreR1, 0);
             Arrays.fill(gamesWithKillerR1, 0);
             Arrays.fill(totalKillerTime, 0);
@@ -1314,7 +1314,7 @@ public class FEStatePane extends JPanel {
         textArea.append(laps + " laps done\n");
         float newScore;
         boolean bestest = false;        
-        //bestScore = 0; // random selection per cycle, but keeping track of best unit
+        
         for (int i = 0; i < 16; i++) {
             newScore = scoreR1[i] + scoreR2[i];
             if (newScore > bestScore) {
@@ -1343,48 +1343,10 @@ public class FEStatePane extends JPanel {
             round = 1;
             newUnit = true;
             bestScore = 0;
-            KillerModels newKiller = new KillerModels();
-            mainTable.killer = newKiller.getKiller();
+            mainTable = new UnitTypeTable();
             setUpLap();
         }
-        //int nextKiller = random.nextInt(12);
-        // try {
-        //     mainTable.killer = (UnitType) killerOptions.get(nextKiller).clone();
-        // } catch (CloneNotSupportedException e) {
-        //         e.printStackTrace();
-        // }
-        // file for full best unit stats summarized
-        // String testFilePath2 = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\MicroRTS\\RandomUnitSelection.csv";
-        // File testFile2 = new File(testFilePath2);
-        // try {
-        //     Writer testOutputFile2 = new FileWriter(testFile2, true);
-        //     testOutputFile2.write(mainTable.killer.cost + " | " + mainTable.killer.hp + " | " + mainTable.killer.maxDamage + " | " + mainTable.killer.attackRange + " | " + mainTable.killer.moveTime + " | " + mainTable.killer.attackTime + " | " + mainTable.killer.causeID + " | " + mainTable.killer.effectID + "\n");
-        //     testOutputFile2.close();
-        // }
-        // catch (IOException e) {
-        //     e.printStackTrace();
-        // }
-
-        // simulated annealing
-        // for (int i = 0; i < 12; i++){
-        //     newScore = scoreR1[i] + scoreR2[i];
-        //     if (SimScore(bestScore, newScore, temperature) >= random.nextFloat()) {                
-        //         bestKiller = killerOptions.get(i);
-        //         bestScore = newScore;
-        //         bestScoreR1 = scoreR1[i];
-        //         bestScoreR2 = scoreR2[i];
-        //         bestGamesMadeR1 = gamesWithKillerR1[i];
-        //         bestGamesWonWithR1 = gamesWonWithKillerR1[i];
-        //         bestGamesMade0 = gamesWithKiller0[i];
-        //         bestGamesMade1 = gamesWithKiller1[i];
-        //         bestGamesMadeBoth = gamesWithKillerBoth[i];
-        //         bestGamesWonWith0 = gamesWonWithKiller0[i];
-        //         bestGamesWonWith1 = gamesWonWithKiller1[i];
-        //         bestest = false;
-        //     }            
-        // }
-               
-
+        
         // file for full best unit stats
         String testFilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\MicroRTS\\BestUnits.csv";
         File testFile = new File(testFilePath);
@@ -1404,16 +1366,6 @@ public class FEStatePane extends JPanel {
             textArea.append("laps are complete\n");
             return;
         }
-        //if (temperature <= 0) {
-            //textArea.append("games have run cold\n");
-            //return;
-        //}
-        // used in simulated annealing
-        // if (bestest) {
-        //     textArea.append("best unit detected\n");
-        //     return;
-        // }
-        //temperature -= 1f/(killerOptions.size() * 2);
         round = 1;
         setUpLap();  
     }

@@ -380,6 +380,10 @@ public class UnitTypeTable  {
 
     }
 
+    public void remakeNewUnit(){
+        killer = getNewUnit();
+    }
+
 
     /**
      * Adds a new unit type to the game

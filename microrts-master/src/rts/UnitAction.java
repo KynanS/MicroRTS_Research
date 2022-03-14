@@ -708,9 +708,15 @@ public class UnitAction {
                 }                
             } 
         }
-        // boost the attack speed
+        // boost the attack speed, or if the unit dies, decrease the attack speed of the unit that killed it
         if (effected.getType().effectID == 3) {
-            if (!pgs.unitIDs.contains(effected.getID())) {
+            if (effected.getType().causeID == 0) {
+                if (!pgs.unitIDs.contains(effector.getID())) {
+                    pgs.unitIDs.add(effector.getID());
+                    effector.getType().attackTime = effector.getType().attackTime * 2;
+                }
+            }
+            else if (!pgs.unitIDs.contains(effected.getID())) {
                 pgs.unitIDs.add(effected.getID());
                 effected.getType().attackTime = effected.getType().attackTime / 2;
             }
