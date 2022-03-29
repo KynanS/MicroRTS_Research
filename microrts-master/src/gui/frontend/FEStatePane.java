@@ -1340,11 +1340,9 @@ public class FEStatePane extends JPanel {
             } 
         } else {
             textArea.append("Best unit found \n");
-            round = 1;
             newUnit = true;
             bestScore = 0;
             mainTable = new UnitTypeTable();
-            setUpLap();
         }
         
         // file for full best unit stats

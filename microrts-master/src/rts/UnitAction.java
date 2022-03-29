@@ -689,7 +689,7 @@ public class UnitAction {
             Player p = pgs.getPlayer(effected.getPlayer());
             p.setResources(p.getResources() + effected.getType().cost);    
         }
-        // do damage back or a second attack, depending on the effect
+        // do damage back or a second attack, depending on the cause
         if (effected.getType().effectID == 1) {
             int damage = effected.getMinDamage();
             effector.setHitPoints(effector.getHitPoints() - damage);
