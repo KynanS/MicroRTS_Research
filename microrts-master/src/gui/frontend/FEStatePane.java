@@ -110,6 +110,8 @@ import util.XMLWriter;
 import ai.core.InterruptibleAI;
 import ai.evaluation.SimpleOptEvaluationFunction;
 import ai.mcts.believestatemcts.BS3_NaiveMCTS;
+import ai.mcts.believestatemcts.BS4_NaiveMCTS;
+import ai.mcts.believestatemcts.BS5_NaiveMCTS;
 import ai.mcts.uct.DownsamplingUCT;
 import ai.scv.SCV;
 
@@ -134,6 +136,8 @@ public class FEStatePane extends JPanel {
 
     public static Class AIs[] = {
                    BS3_NaiveMCTS.class,
+                   BS4_NaiveMCTS.class,
+                   BS5_NaiveMCTS.class,
                    PassiveAI.class,
                    MouseController.class,
                    RandomAI.class,
@@ -250,20 +254,21 @@ public class FEStatePane extends JPanel {
     boolean newUnit = true;
 
     // variables for round 1
-    float scoreR1[] = new float[16];
-    int gamesWithKillerR1[] = new int[16];
-    int totalKillerTime[] = new int[16];
-    int gamesPlayedR1[] = new int[16];
-    int gamesWonWithKillerR1[] = new int[16];
+    float scoreR1[] = new float[10];
+    int gamesWithKillerR1[] = new int[10];
+    int totalKillerTime[] = new int[10];
+    int totalGameTime[] = new int[10];
+    int gamesPlayedR1[] = new int[10];
+    int gamesWonWithKillerR1[] = new int[10];
 
     // variables for round 2
-    float scoreR2[] = new float[16];
-    int gamesWithKiller0[] = new int[16];
-    int gamesWithKiller1[] = new int[16];
-    int gamesWithKillerBoth[] = new int[16];
-    int gamesPlayedR2[] = new int[16];
-    int gamesWonWithKiller0[] = new int[16];
-    int gamesWonWithKiller1[] = new int[16];    
+    float scoreR2[] = new float[10];
+    int gamesWithKiller0[] = new int[10];
+    int gamesWithKiller1[] = new int[10];
+    int gamesWithKillerBoth[] = new int[10];
+    int gamesPlayedR2[] = new int[10];
+    int gamesWonWithKiller0[] = new int[10];
+    int gamesWonWithKiller1[] = new int[10];    
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public FEStatePane() throws Exception {        
@@ -740,6 +745,7 @@ public class FEStatePane extends JPanel {
 
             // set parameters:
             List<ParameterSpecification> parameters = ai.getParameters();
+
             for(ParameterSpecification p:parameters) {
                 if (p.type == int.class) {
                     JFormattedTextField f = (JFormattedTextField)AIOptionsPanelComponents[player].get(p.name);
@@ -816,7 +822,6 @@ public class FEStatePane extends JPanel {
         HashMap<String, JComponent> components = AIOptionsPanelComponents[player];
         jPanel.removeAll();
         components.clear();
-        
         AI AIInstance = createAIInternal(aiComboBox[player].getSelectedIndex(), 0, mainTable);
         List<ParameterSpecification> parameters = AIInstance.getParameters();
         for(ParameterSpecification p:parameters) {
@@ -970,7 +975,11 @@ public class FEStatePane extends JPanel {
                     boolean player1 = false;
                     boolean both = false;
                     boolean madeR1 = false;
+                    int kStart = 0;
+                    int kEnd = 0;
+                    int kTotal = 0;
                     mainTable.killer = killerOptions.get(versionNum);
+                    List<Unit> killersR1 = new ArrayList<>();
 
                     AI ai1 = createAI(aiComboBox[0].getSelectedIndex(), 0, mainTable);
                     AI ai2 = createAI(aiComboBox[1].getSelectedIndex(), 1, mainTable);
@@ -1057,17 +1066,29 @@ public class FEStatePane extends JPanel {
                             }
                             // check to see if a Killer was made for round 1
                             if (round == 1) {
+                                // check if a new killer unit has been made
+                                List<Unit> killers = gs.getPhysicalGameState().killerTeam();
+                                if (!killers.isEmpty()) {
+                                    for (Unit k : killers) {
+                                        if (!killersR1.contains(k)) {
+                                            killersR1.add(k);
+                                        }
+                                    }
+                                }
                                 if (gs.getPhysicalGameState().killerMade() && !wasKillerMade) {
                                     if (killerAppear.isEmpty()) {
                                         gamesWithKillerR1[rVersion]++;
                                     } 
-                                    killerAppear.add(gs.getTime());                                                            
+                                    killerAppear.add(gs.getTime());
+                                    kStart = gs.getTime();                                                            
                                     wasKillerMade = true;     
                                     madeR1 = true;                                       
                                 }  
                                 // check to see if killer was killed
                                 if (!gs.getPhysicalGameState().killerMade() && wasKillerMade) {                             
                                     killerDisappear.add(gs.getTime());
+                                    kEnd = gs.getTime();
+                                    kTotal += kEnd - kStart;
                                     wasKillerMade = false;
                                 }
                             }                                  
@@ -1114,38 +1135,20 @@ public class FEStatePane extends JPanel {
                         if (round == 1) {
                             killerDisappear.add(gs.getTime());
                             gamesPlayedR1[rVersion]++;
-                            // add to the score if player 0 won and killer was made
+                            // add 1 to games won and collect time killer was in game
                             if (gs.getPhysicalGameState().winner() == 0 && madeR1) {
-                                gamesWonWithKillerR1[rVersion]++; 
-                                for (int i = 0; i < killerAppear.size(); i++) {                               
-                                    scoreR1[rVersion] += 1f * FinalScoreR1(killerDisappear.get(i).floatValue(), killerAppear.get(i).floatValue(), gs.getTime());                                    
-                                }   
+                                gamesWonWithKillerR1[rVersion]++;
+                                totalKillerTime[rVersion] += kTotal;
+                                totalGameTime[rVersion] += gs.getTime();
                             }
-                            // subract to the score if player 1 won/there was a draw and killer was made
+                            // collect time killer was in game
                             else if (!killerAppear.isEmpty()) {
-                                for (int i = 0; i < killerAppear.size(); i++) {                                
-                                    scoreR1[rVersion] -= 1f * FinalScoreR1(killerDisappear.get(i).floatValue(), killerAppear.get(i).floatValue(), gs.getTime());
-                                }
-                            }
-                            // don't add to the score if killer wasn't made regardless of win, loss or draw
-                            // if all the games for this unit in this round have been played, record the results
-                            if (gamesPlayedR1[rVersion] == Integer.parseInt(numberOfGames.getText())){
-                                String testFilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\MicroRTS\\tests.csv";
-                                File testFile = new File(testFilePath);
-                                scoreR1[rVersion] = scoreR1[rVersion] / (gamesWithKillerR1[rVersion]);
-                                try {
-                                    Writer testOutputFile = new FileWriter(testFile, true);
-                                    testOutputFile.write(laps + " | " + round + " | " + killerOptions.get(versionNum).cost + " | " + killerOptions.get(versionNum).hp + " | " + killerOptions.get(versionNum).maxDamage + " | " + killerOptions.get(versionNum).attackRange + " | " + killerOptions.get(versionNum).moveTime + " | " + killerOptions.get(versionNum).attackTime + " | " + killerOptions.get(versionNum).causeID + " | "+ killerOptions.get(versionNum).effectID + " | " + 
-                                    gamesWithKillerR1[rVersion] + " | " + gamesWonWithKillerR1[rVersion] + " | " + scoreR1[rVersion] + "\n");
-                                    testOutputFile.close();                                
-                                }
-                                catch (IOException e) {
-                                    e.printStackTrace();
-                                }
+                                totalKillerTime[rVersion] += kTotal;
+                                totalGameTime[rVersion] += gs.getTime();
                             }
                             // check to see if it's time to start round 2
                             boolean round2 = true;
-                            for (int i = 0; i < 16; i++) {
+                            for (int i = 0; i < 10; i++) {
                                 if (gamesPlayedR1[i] < Integer.parseInt(numberOfGames.getText())) {
                                     round2 = false;
                                 }
@@ -1172,21 +1175,8 @@ public class FEStatePane extends JPanel {
                                 Integer gw0 = gamesWonWithKiller0[rVersion];
                                 Integer gwk0 = gamesWithKiller0[rVersion];
                                 Integer gwk1 = gamesWithKiller1[rVersion] - gamesWithKillerBoth[rVersion];
-                                scoreR2[rVersion] = FinalScoreR2(gw0.floatValue(), gwk0.floatValue(), gwk1.floatValue());
-                                try {
-                                    Writer testOutputFile = new FileWriter(testFile, true);                                    
-                                    testOutputFile.write(laps + " | " + round + " | " + killerOptions.get(versionNum).cost + " | " + killerOptions.get(versionNum).hp + " | " + killerOptions.get(versionNum).maxDamage + " | " + killerOptions.get(versionNum).attackRange + " | " + 
-                                    killerOptions.get(versionNum).moveTime + " | " + killerOptions.get(versionNum).attackTime + " | " + killerOptions.get(versionNum).causeID + " | " + killerOptions.get(versionNum).effectID
-                                    + " | " + gamesWithKiller0[rVersion] + " | " + gamesWithKiller1[rVersion] + " | " + gamesWithKillerBoth[rVersion] + " | " + 
-                                    gamesWonWithKiller0[rVersion] + " | " + gamesWonWithKiller1[rVersion] + " | " + scoreR2[rVersion] + "\n");
-                                    testOutputFile.write("\n");
-                                    testOutputFile.close();                                
-                                }
-                                catch (IOException e) {
-                                    e.printStackTrace();
-                                }
                             boolean eval = true;
-                            for (int i = 0; i < 16; i++) {
+                            for (int i = 0; i < 10; i++) {
                                 if (gamesPlayedR2[i] < Integer.parseInt(numberOfGames.getText())) {
                                     eval = false;
                                 }
@@ -1216,33 +1206,17 @@ public class FEStatePane extends JPanel {
     }
     //set things up to run a lap of tests
     public void setUpLap(){
-        if (newUnit) {
-            newUnit = false;
-            // file for full best unit stats
-            String testFilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\MicroRTS\\BestUnits.csv";
-            File testFile = new File(testFilePath);
-            try {
-                Writer testOutputFile = new FileWriter(testFile, true);
-                testOutputFile.write("New Unit" +  "\n");
-                testOutputFile.write(mainTable.killer.cost + " | " + mainTable.killer.hp + " | " + mainTable.killer.maxDamage + " | " + 
-                mainTable.killer.attackRange + " | " + mainTable.killer.moveTime + " | " + mainTable.killer.attackTime + " | " + 
-                mainTable.killer.causeID + " | " + mainTable.killer.effectID + "\n");
-                testOutputFile.close();
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
         String FilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\microrts-master\\maps\\Standard\\Standard1";
         if (round == 1) {
             try {
-                MovingCompany(mainTable.killer);
+                FamilyGathering(mainTable.killer);
             } catch (CloneNotSupportedException e1) {
                 e1.printStackTrace();
             }
             Arrays.fill(scoreR1, 0);
             Arrays.fill(gamesWithKillerR1, 0);
             Arrays.fill(totalKillerTime, 0);
+            Arrays.fill(totalGameTime, 0);
             Arrays.fill(gamesPlayedR1, 0);
             Arrays.fill(gamesWonWithKillerR1, 0); 
             FilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\microrts-master\\maps\\Standard\\Standard1";
@@ -1288,20 +1262,8 @@ public class FEStatePane extends JPanel {
         Runnable trial8 = makeRunnable(8);
         unitTrials.add(trial8);
         Runnable trial9 = makeRunnable(9);
-        unitTrials.add(trial9);
-        Runnable trial10 = makeRunnable(10);
-        unitTrials.add(trial10);
-        Runnable trial11 = makeRunnable(11);
-        unitTrials.add(trial11);  
-        Runnable trial12 = makeRunnable(12);
-        unitTrials.add(trial12);
-        Runnable trial13 = makeRunnable(13);
-        unitTrials.add(trial13); 
-        Runnable trial14 = makeRunnable(14);
-        unitTrials.add(trial14);
-        Runnable trial15 = makeRunnable(15);
-        unitTrials.add(trial15);          
-        for (int j = 0; j < 16; j++){
+        unitTrials.add(trial9);         
+        for (int j = 0; j < 10; j++){
             for (int k = 0; k < Integer.parseInt(numberOfGames.getText()); k++){
                 trialRuns.execute(unitTrials.get(j));
             }            
@@ -1312,53 +1274,23 @@ public class FEStatePane extends JPanel {
     public void evaluate() throws CloneNotSupportedException{
         laps++;
         textArea.append(laps + " laps done\n");
-        float newScore;
-        boolean bestest = false;        
-        
-        for (int i = 0; i < 16; i++) {
-            newScore = scoreR1[i] + scoreR2[i];
-            if (newScore > bestScore) {
-                bestKiller = killerOptions.get(i);
-                bestScore = newScore;
-                bestScoreR1 = scoreR1[i];
-                bestScoreR2 = scoreR2[i];
-                bestGamesMadeR1 = gamesWithKillerR1[i];
-                bestGamesWonWithR1 = gamesWonWithKillerR1[i];
-                bestGamesMade0 = gamesWithKiller0[i];
-                bestGamesMade1 = gamesWithKiller1[i];
-                bestGamesMadeBoth = gamesWithKillerBoth[i];
-                bestGamesWonWith0 = gamesWonWithKiller0[i];
-                bestGamesWonWith1 = gamesWonWithKiller1[i];
-                bestest = true;
+        boolean bestest = false;
+        // File for recording unit trials
+        String testFilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\MicroRTS\\UnitTrials.csv";
+        File testFile = new File(testFilePath);        
+        for (int i = 0; i < 10; i++) {       
+            try {
+                int k = i + 1;
+                Writer testOutputFile = new FileWriter(testFile, true);
+                testOutputFile.write(k + " " +  gamesWithKillerR1[i] + " " + gamesWonWithKillerR1[i] + " " + (double)(totalKillerTime[i]/totalGameTime[i]) + " " + 
+                    gamesWithKiller0[i] + " " + gamesWithKiller1[i] + " " + gamesWithKillerBoth[i] + " " + gamesWonWithKiller0[i] + " " + gamesWonWithKiller1[0] + "\n");
+                testOutputFile.close();
+            }
+            catch (IOException e) {
+                e.printStackTrace();
             }
         }
-        if (bestest) {
-            try {
-                mainTable.killer = (UnitType) bestKiller.clone();
-            } catch (CloneNotSupportedException e) {
-                e.printStackTrace();
-            } 
-        } else {
-            textArea.append("Best unit found \n");
-            newUnit = true;
-            bestScore = 0;
-            mainTable = new UnitTypeTable();
-        }
         
-        // file for full best unit stats
-        String testFilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\MicroRTS\\BestUnits.csv";
-        File testFile = new File(testFilePath);
-        try {
-            Writer testOutputFile = new FileWriter(testFile, true);
-            testOutputFile.write(laps + " | " + bestKiller.cost + " | " + bestKiller.hp + " | " + bestKiller.maxDamage + " | " + bestKiller.attackRange + " | " + bestKiller.moveTime + " | " + 
-                bestKiller.attackTime + " | " + bestKiller.causeID + " | " + bestKiller.effectID + " | " + bestScore + " | " + bestScoreR1 + 
-                " | " + bestGamesMadeR1 + " | " + bestGamesWonWithR1 + " | " + bestScoreR2 + " | " + bestGamesMade0 + 
-                " | " + bestGamesMade1 + " | " + bestGamesMadeBoth + " | " + bestGamesWonWith0 + " | " + bestGamesWonWith1 + "\n");
-            testOutputFile.close();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
         // check to see if we should keep going, and update any values necessary
         if (laps == Integer.parseInt(numberOfLaps.getText())){
             textArea.append("laps are complete\n");
@@ -1369,7 +1301,7 @@ public class FEStatePane extends JPanel {
     }
 
     //make a list of all possible new units for a cycle of tests
-    public void MovingCompany(UnitType inputKiller) throws CloneNotSupportedException{
+    public void FamilyGathering(UnitType inputKiller) throws CloneNotSupportedException{
         killerOptions.clear();
         //different versions
         UnitType temp0 = (UnitType)inputKiller.clone();
@@ -1382,118 +1314,116 @@ public class FEStatePane extends JPanel {
         UnitType temp7 = (UnitType)inputKiller.clone();
         UnitType temp8 = (UnitType)inputKiller.clone();
         UnitType temp9 = (UnitType)inputKiller.clone();
-        UnitType temp10 = (UnitType)inputKiller.clone();
-        UnitType temp11 = (UnitType)inputKiller.clone();
-        UnitType temp12 = (UnitType)inputKiller.clone();
-        UnitType temp13 = (UnitType)inputKiller.clone();
-        UnitType temp14 = (UnitType)inputKiller.clone();
-        UnitType temp15 = (UnitType)inputKiller.clone();
 
-        //for cost
-        temp0.cost += 1;
+        //killer version 0
+        temp0.cost = 3;
+        temp0.hp = 4;
+        temp0.maxDamage = temp0.minDamage = 2;
+        temp0.attackRange = 3;
+        temp0.moveTime = 13;
+        temp0.attackTime = 10;
+        temp0.causeID = 0;
+        temp0.effectID = 1;
         killerOptions.add(temp0);
-        temp1.cost -= 1;
-        if (temp1.cost <= 0) {
-            temp1.cost = 1 + random.nextInt(3);
-        }
+
+        //killer version 1
+        temp1.cost = 3;
+        temp1.hp = 2;
+        temp1.maxDamage = temp0.minDamage = 2;
+        temp1.attackRange = 1;
+        temp1.moveTime = 7;
+        temp1.attackTime = 7;
+        temp1.causeID = 2;
+        temp1.effectID = 0;
         killerOptions.add(temp1);
 
-        //for hp
-        temp2.hp += 1;
+        //killer version 2
+        temp2.cost = 2;
+        temp2.hp = 1;
+        temp2.maxDamage = temp0.minDamage = 3;
+        temp2.attackRange = 1;
+        temp2.moveTime = 15;
+        temp2.attackTime = 3;
+        temp2.causeID = 0;
+        temp2.effectID = 0;
         killerOptions.add(temp2);
-        temp3.hp -= 1;
-        if (temp3.hp <= 0) {
-            temp3.hp = 1 + random.nextInt(3);
-        }
-        killerOptions.add(temp3);     
 
-        //for max damage
-        temp4.maxDamage += 1;
-        temp4.minDamage = temp4.maxDamage;
+        //killer version 3
+        temp3.cost = 1;
+        temp3.hp = 3;
+        temp3.maxDamage = temp0.minDamage = 1;
+        temp3.attackRange = 2;
+        temp3.moveTime = 10;
+        temp3.attackTime = 8;
+        temp3.causeID = 3;
+        temp3.effectID = 0;
+        killerOptions.add(temp3);
+
+        //killer version 4
+        temp4.cost = 1;
+        temp4.hp = 3;
+        temp4.maxDamage = temp0.minDamage = 2;
+        temp4.attackRange = 3;
+        temp4.moveTime = 11;
+        temp4.attackTime = 3;
+        temp4.causeID = 3;
+        temp4.effectID = 1;
         killerOptions.add(temp4);
-        temp5.maxDamage -= 1;
-        if (temp5.maxDamage <= 0) {
-            temp5.maxDamage = 1 + random.nextInt(3);
-        }
-        temp5.minDamage = temp5.maxDamage;
-        killerOptions.add(temp5);        
 
-        //for attack range
-        temp6.attackRange += 1;
+        //killer version 5
+        temp5.cost = 1;
+        temp5.hp = 4;
+        temp5.maxDamage = temp0.minDamage = 1;
+        temp5.attackRange = 3;
+        temp5.moveTime = 11;
+        temp5.attackTime = 5;
+        temp5.causeID = 3;
+        temp5.effectID = 0;
+        killerOptions.add(temp5);
+
+        //killer version 6
+        temp6.cost = 2;
+        temp6.hp = 1;
+        temp6.maxDamage = temp0.minDamage = 3;
+        temp6.attackRange = 2;
+        temp6.moveTime = 11;
+        temp6.attackTime = 3;
+        temp6.causeID = 2;
+        temp6.effectID = 1;
         killerOptions.add(temp6);
-        temp7.attackRange -= 1;
-        if (temp7.attackRange <= 0) {
-            temp7.attackRange = 1 + random.nextInt(3);
-        }
+
+        //killer version 7
+        temp7.cost = 1;
+        temp7.hp = 3;
+        temp7.maxDamage = temp0.minDamage = 2;
+        temp7.attackRange = 4;
+        temp7.moveTime = 13;
+        temp7.attackTime = 3;
+        temp7.causeID = 3;
+        temp7.effectID = 1;
         killerOptions.add(temp7);
 
-        //for move speed
-        temp8.moveTime += 1 + random.nextInt(3);
+        //killer version 8
+        temp8.cost = 1;
+        temp8.hp = 3;
+        temp8.maxDamage = temp0.minDamage = 2;
+        temp8.attackRange = 1;
+        temp8.moveTime = 7;
+        temp8.attackTime = 8;
+        temp8.causeID = 3;
+        temp8.effectID = 0;
         killerOptions.add(temp8);
-        temp9.moveTime -= (1 + random.nextInt(3));
-        if (temp9.moveTime <= 0) {
-            temp9.moveTime = 10;
-        }
+
+        //killer version 9
+        temp9.cost = 2;
+        temp9.hp = 1;
+        temp9.maxDamage = temp0.minDamage = 2;
+        temp9.attackRange = 2;
+        temp9.moveTime = 7;
+        temp9.attackTime = 5;
+        temp9.causeID = 1;
+        temp9.effectID = 3;
         killerOptions.add(temp9);
 
-        //for attack speed
-        temp10.attackTime += 2 + random.nextInt(4);
-        killerOptions.add(temp10);
-        temp11.attackTime -= (2 + random.nextInt(4));
-        if (temp11.attackTime <= 0) {
-            temp11.attackTime = 5;
-        }
-        killerOptions.add(temp11);
-
-        // for cause type
-        temp12.causeID += 1;
-        if (temp12.causeID >= 4) {
-            temp12.causeID = 0;
-        }
-        killerOptions.add(temp12);
-        temp13.causeID -= 1;
-        if (temp13.causeID < 0) {
-            temp13.causeID = 3;
-        }
-        killerOptions.add(temp13);
-
-        // for effect type
-        temp14.effectID += 1;
-        if (temp14.effectID >= 4) {
-            temp14.effectID = 0;
-        }
-        killerOptions.add(temp14);
-        temp15.effectID -= 1;
-        if (temp15.effectID < 0) {
-            temp15.effectID = 3;
-        }
-        killerOptions.add(temp15);
-    }
-
-    // used to determine the score for round 1
-    float FinalScoreR1(float appear, float disappear, int time) {
-
-        float score = (disappear - appear) / time;
-
-        return score;
-    }
-
-    // used to determine the score for round 2
-    float FinalScoreR2(float gamesWon0, float gamesWKiller0, float gamesWKiller1) {
-        float tempScore = gamesWon0 / (gamesWKiller0 + gamesWKiller1);
-        float score = 1f - Math.abs(0.5f - tempScore);
-        return score;
-    }
-
-    // used to determine the simulated annealing score
-    float SimScore(float currentScore, float neighborScore, float currentTemperature) {
-        float sim = 1f;
-        if (neighborScore > currentScore) {
-            return sim;
-        }
-        else {
-            sim = currentTemperature - Math.abs(currentScore - neighborScore);
-            return sim;
-        }
     }
 }

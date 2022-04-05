@@ -50,7 +50,6 @@ public abstract class AI {
      * @return
      */
     public abstract List<ParameterSpecification> getParameters();
-
     
     /**
      * This method can be used to report any meaningful statistics once the game is over
