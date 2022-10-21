@@ -1274,16 +1274,17 @@ public class FEStatePane extends JPanel {
     public void evaluate() throws CloneNotSupportedException{
         laps++;
         textArea.append(laps + " laps done\n");
-        boolean bestest = false;
         // File for recording unit trials
         String testFilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\MicroRTS\\UnitTrials.csv";
         File testFile = new File(testFilePath);        
         for (int i = 0; i < 10; i++) {       
             try {
                 int k = i + 1;
+                double timeK = totalKillerTime[i];
+                double timeT = totalGameTime[i];
                 Writer testOutputFile = new FileWriter(testFile, true);
-                testOutputFile.write(k + " " +  gamesWithKillerR1[i] + " " + gamesWonWithKillerR1[i] + " " + (double)(totalKillerTime[i]/totalGameTime[i]) + " " + 
-                    gamesWithKiller0[i] + " " + gamesWithKiller1[i] + " " + gamesWithKillerBoth[i] + " " + gamesWonWithKiller0[i] + " " + gamesWonWithKiller1[0] + "\n");
+                testOutputFile.write(k + " " +  gamesWithKillerR1[i] + " " + gamesWonWithKillerR1[i] + " " + timeK/timeT + " " + 
+                    gamesWithKiller0[i] + " " + gamesWithKiller1[i] + " " + gamesWithKillerBoth[i] + " " + gamesWonWithKiller0[i] + " " + gamesWonWithKiller1[i] + "\n");
                 testOutputFile.close();
             }
             catch (IOException e) {

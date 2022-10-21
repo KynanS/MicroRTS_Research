@@ -367,7 +367,7 @@ public class UnitAction {
                     int damage;
                     // cause type 2, where killer deals damage
                     if (u.getType().name == "Killer" && u.getType().causeID == 2) {
-                        Effect(u, other, s, pgs); // to make life easier, send other and u through backwards for this Effect call
+                        Effect(u, other, s, pgs); // to make life easier, send other and u through backwards compared to cause type 1 for this Effect call
                     }
                     // cause type 3, where killer gets a boost every 3 times it attacks
                     if (u.getType().name == "Killer" && u.getType().causeID == 3) {
