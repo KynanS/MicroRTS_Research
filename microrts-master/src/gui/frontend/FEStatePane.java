@@ -1206,7 +1206,7 @@ public class FEStatePane extends JPanel {
     }
     //set things up to run a lap of tests
     public void setUpLap(){
-        String FilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\microrts-master\\maps\\Standard\\Standard1";
+        String FilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\microrts-master\\maps\\Standard\\Standard3";
         if (round == 1) {
             try {
                 FamilyGathering(mainTable.killer);
@@ -1219,7 +1219,7 @@ public class FEStatePane extends JPanel {
             Arrays.fill(totalGameTime, 0);
             Arrays.fill(gamesPlayedR1, 0);
             Arrays.fill(gamesWonWithKillerR1, 0); 
-            FilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\microrts-master\\maps\\Standard\\Standard1";
+            FilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\microrts-master\\maps\\Standard\\Standard3";
         } else if (round == 2) {
             FilePath = "C:\\Users\\kynan\\Documents\\MicroRTS_Research\\microrts-master\\maps\\Standard\\Standard3";
             Arrays.fill(scoreR2, 0);
